@@ -1,0 +1,45 @@
+version: '3.8'
+
+services:
+  # Centralized PostgreSQL Database
+  postgres:
+    image: postgres:16-alpine
+    container_name: adhunik_fashion_db
+    restart: always
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: adhunik_secure_password_2026
+      POSTGRES_DB: adhunik_fashion_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    networks:
+      - app_network
+
+  # Next.js Fullstack Web App + POS
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: adhunik_fashion_app
+    restart: always
+    ports:
+      - "3000:3000"
+    environment:
+      - DATABASE_URL=postgresql://postgres:adhunik_secure_password_2026@postgres:5432/adhunik_fashion_db?schema=public
+      - NEXTAUTH_SECRET=adhunik_fashion_super_jwt_secret_key_32_chars
+      - NEXTAUTH_URL=http://localhost:3000
+      - NODE_ENV=production
+    depends_on:
+      - postgres
+    networks:
+      - app_network
+
+volumes:
+  pgdata:
+    driver: local
+
+networks:
+  app_network:
+    driver: bridge
